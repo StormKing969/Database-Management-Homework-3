@@ -1,0 +1,120 @@
+Script started on Wed 30 Oct 2018 05:54:43 PM EDT
+wasajana@pe07:~/cs630/hw3$ sqlplus wasajana/wasajana@//dbs3.cs.umb.edu/dbs3
+
+SQL*Plus: Release 12.1.0.2.0 Production on Wed Oct 31 17:55:57 2018
+
+Copyright (c) 1982, 2014, Oracle.  All rights reserved.
+
+Last Successful login time: Wed Oct 31 2018 17:35:26 -04:00
+
+Connected to:
+Oracle Database 12c Enterprise Edition Release 12.1.0.2.0 - 64bit Production
+With the Partitioning, OLAP, Advanced Analytics and Real Application Testing options
+
+SQL> @problem1.sql
+
+       PID PNAME				    COLOR
+---------- ---------------------------------------- ---------------
+	 8 Fire Hydrant Cap			    Red
+
+
+       PID PNAME				    COLOR
+---------- ---------------------------------------- ---------------
+	 2 Smoke Shifter End			    Black
+	 3 Acme Widget Washer			    Red
+	 4 Acme Widget Washer			    Silver
+	 5 I Brake for Crop Circles Sticker	    Translucent
+	 6 Anti-Gravity Turbine Generator	    Cyan
+
+
+no rows selected
+
+
+no rows selected
+
+SQL> echo on
+SP2-0042: unknown command "echo on" - rest of line ignored.
+SQL> set echo on
+SQL> @problem1.sql
+SQL> --[Part a]
+SQL> 
+SQL> SELECT DISTINCT p.pid, p.pname, p.color
+  2  FROM parts p
+  3  WHERE NOT EXISTS (
+  4  	     SELECT *
+  5  	     FROM suppliers s
+  6  	     WHERE NOT EXISTS (
+  7  		     SELECT *
+  8  		     FROM catalog c
+  9  		     WHERE c.sid = s.sid AND c.pid = p.pid
+ 10  		     )
+ 11  );
+
+       PID PNAME				    COLOR
+---------- ---------------------------------------- ---------------
+	 8 Fire Hydrant Cap			    Red
+
+SQL> 
+SQL> --[Part b]
+SQL> 
+SQL> SELECT DISTINCT p.pid, p.pname, p.color
+  2  FROM suppliers s, parts p, catalog c
+  3  WHERE s.sname LIKE 'A%' AND p.pid = c.pid AND c.sid = s.sid
+  4  MINUS
+  5  SELECT DISTINCT p.pid, p.pname, p.color
+  6  FROM suppliers s, parts p, catalog c
+  7  WHERE s.sname NOT LIKE 'A%' AND p.pid = c.pid AND c.sid = s.sid;
+
+       PID PNAME				    COLOR
+---------- ---------------------------------------- ---------------
+	 2 Smoke Shifter End			    Black
+	 3 Acme Widget Washer			    Red
+	 4 Acme Widget Washer			    Silver
+	 5 I Brake for Crop Circles Sticker	    Translucent
+	 6 Anti-Gravity Turbine Generator	    Cyan
+
+SQL> 
+SQL> --[Part c]
+SQL> 
+SQL> SELECT DISTINCT e.eid, e.salary
+  2  FROM employees e
+  3  WHERE NOT EXISTS ((SELECT a.aid
+  4  	     FROM aircraft a
+  5  	     WHERE a.cruisingrange < 2000
+  6  )
+  7  MINUS
+  8  SELECT c.aid
+  9  FROM certified c
+ 10  WHERE c.eid = e.eid
+ 11  );
+
+no rows selected
+
+SQL> 
+SQL> --[Part d]
+SQL> 
+SQL> SELECT DISTINCT e.eid, MAX(e.salary)
+  2  FROM employees e
+  3  WHERE NOT EXISTS ((SELECT a.aid
+  4  	     FROM aircraft a
+  5  	     WHERE a.cruisingrange < 2000
+  6  )
+  7  MINUS
+  8  SELECT c.aid
+  9  FROM certified c
+ 10  WHERE c.eid = e.eid
+ 11  )
+ 12  GROUP BY e.eid
+ 13  HAVING MAX(e.salary) = (SELECT DISTINCT MAX(e.salary)
+ 14  	     FROM employees e
+ 15  	     );
+
+no rows selected
+
+SQL> exit
+Disconnected from Oracle Database 12c Enterprise Edition Release 12.1.0.2.0 - 64bit Production
+With the Partitioning, OLAP, Advanced Analytics and Real Application Testing options
+wasajana@pe07:~/cs630/hw3$ exit
+exit
+
+Script done on Wed 31 Oct 2018 05:56:22 PM EDT
